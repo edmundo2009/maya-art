@@ -55,7 +55,7 @@ This page is activated when a user clicks a thumbnail. It is a full-screen, hori
 This UI is overlaid on the Artwork Viewer page and must be subtle.
 
 *   **"HOME" Link:**
-    *   **Text:** "MAYA LAMA" same font as "mainpage MAYA LAMA" title.
+    *   **Text:** "HOME" same font as -> DISCARDED "mainpage MAYA LAMA" title.
     *   **Position:** Fixed to the top-left corner of the viewport, with clean padding (e.g., `p-4` or `p-6`).
     *   **Functionality:** Clicking this text navigates the user back to the Homepage.
     *   **Styling:** Use the same font as "THEMES". It should have a very subtle, semi-transparent background on hover to lift it from the image without looking like a heavy button.

@@ -147,8 +147,8 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName }: 
       )}
 
       {/* Image Counter */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-200">
-        <span className="text-black/80 text-sm font-medium">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 bg-white/40 backdrop-blur-sm rounded-full shadow-sm border border-gray-200/50">
+        <span className="text-black/70 text-xs font-normal tracking-wide">
           {currentIndex + 1} / {artworks.length}
         </span>
       </div>

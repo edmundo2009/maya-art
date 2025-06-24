@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '@/lib/artwork';
@@ -11,17 +11,41 @@ interface GalleryNavigationProps {
 
 export default function GalleryNavigation({ currentCategory }: GalleryNavigationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const otherCategories = CATEGORIES.filter(cat => cat !== currentCategory);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setIsExpanded(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsExpanded(false);
+    }, 150); // Small delay to prevent flickering
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div 
       className="relative"
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Current Category Display */}
-      <div className="font-inter font-medium text-sm tracking-widest text-black/90 cursor-pointer">
+      <div className="font-inter font-medium text-sm tracking-widest text-black/90 hover:text-black hover:bg-black/10 px-3 py-2 rounded transition-colors duration-200 cursor-pointer">
         {currentCategory}
       </div>
 

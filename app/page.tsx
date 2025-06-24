@@ -49,7 +49,7 @@ export default function HomePage() {
     <div className="flex min-h-screen w-full items-start justify-center bg-neutral-100 p-8 md:p-16 lg:p-24">
       <div className="w-full max-w-7xl">
         {/* Block 1: Artist Name */}
-        <h1 className="font-playfair text-4xl font-light tracking-[0.35em] text-gray-800 md:text-5xl lg:text-6xl">
+        <h1 className="font-playfair text-4xl font-light tracking-[0.2em] text-gray-800 md:text-5xl lg:text-6xl">
           MAYA LAMA
         </h1>
         
