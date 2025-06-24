@@ -12,9 +12,10 @@ interface ArtworkViewerProps {
   artworks: ArtworkItem[];
   initialIndex: number;
   categoryName: string;
+  onIndexChange?: (index: number) => void;
 }
 
-export default function ArtworkViewer({ artworks, initialIndex, categoryName }: ArtworkViewerProps) {
+export default function ArtworkViewer({ artworks, initialIndex, categoryName, onIndexChange }: ArtworkViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   
@@ -26,8 +27,9 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName }: 
     if (newIndex >= 0 && newIndex < artworks.length) {
       setDirection(dir);
       setCurrentIndex(newIndex);
+      onIndexChange?.(newIndex);
     }
-  }, [artworks.length]);
+  }, [artworks.length, onIndexChange]);
 
   const goToPrevious = useCallback(() => {
     if (!isFirst) {
@@ -40,6 +42,13 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName }: 
       navigateToImage(currentIndex + 1, 1);
     }
   }, [currentIndex, isLast, navigateToImage]);
+
+  // Sync currentIndex when initialIndex changes (URL navigation)
+  useEffect(() => {
+    if (initialIndex !== currentIndex) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex, currentIndex]);
 
   // Keyboard navigation
   useEffect(() => {
