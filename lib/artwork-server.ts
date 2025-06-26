@@ -7,7 +7,9 @@ export function getArtworkData(): Category[] {
   
   return CATEGORIES.map(categoryName => {
     const categoryPath = path.join(artworkDir, categoryName);
-    const slug = categoryName.toLowerCase().replace(/\s+/g, '-');
+    // Create clean slug from the display name (remove number prefix)
+    const displayName = categoryName.replace(/^\d+\.\s*/, '');
+    const slug = displayName.toLowerCase().replace(/\s+/g, '-');
     
     let artworks: ArtworkItem[] = [];
     
@@ -20,14 +22,14 @@ export function getArtworkData(): Category[] {
           id: `${slug}-${index + 1}`,
           category: categoryName,
           filename,
-          alt: `Artwork from the ${categoryName} series, number ${index + 1}`,
+          alt: `Artwork from the ${displayName} series, number ${index + 1}`,
         }));
     } catch (error) {
       console.warn(`Could not read directory for ${categoryName}:`, error);
     }
     
     return {
-      name: categoryName,
+      name: displayName, // Use clean display name without number prefix
       slug,
       artworks,
     };

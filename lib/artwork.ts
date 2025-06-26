@@ -12,8 +12,8 @@ export interface Category {
 }
 
 export const CATEGORIES = [
-  'ARTIST MONOLOGUES',
-  'QUEST FOR INFINITY',
-  'BUBBLE MOON',
-  'WEATHER REPORT'
+  '1. Artist Monologues',
+  '2. Quest for Infinity', 
+  '3. Weather Report',
+  '4. Bubble Moon'
 ];

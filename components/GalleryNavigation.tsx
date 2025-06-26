@@ -3,17 +3,24 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES } from '@/lib/artwork';
 
 interface GalleryNavigationProps {
   currentCategory: string;
 }
 
+// Static category data for client-side navigation
+const NAVIGATION_CATEGORIES = [
+  { name: 'Artist Monologues', slug: 'artist-monologues' },
+  { name: 'Quest for Infinity', slug: 'quest-for-infinity' },
+  { name: 'Weather Report', slug: 'weather-report' },
+  { name: 'Bubble Moon', slug: 'bubble-moon' }
+];
+
 export default function GalleryNavigation({ currentCategory }: GalleryNavigationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const otherCategories = CATEGORIES.filter(cat => cat !== currentCategory);
+  const otherCategories = NAVIGATION_CATEGORIES.filter(cat => cat.name !== currentCategory);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -61,11 +68,11 @@ export default function GalleryNavigation({ currentCategory }: GalleryNavigation
           >
             {otherCategories.map((category) => (
               <Link
-                key={category}
-                href={`/gallery/${category.toLowerCase().replace(/\s+/g, '-')}`}
+                key={category.slug}
+                href={`/gallery/${category.slug}`}
                 className="block px-4 py-3 text-sm font-medium tracking-wider text-black/80 hover:text-black hover:bg-black/10 transition-colors duration-100 first:rounded-t-sm last:rounded-b-sm"
               >
-                {category}
+                {category.name}
               </Link>
             ))}
           </motion.div>

@@ -25,7 +25,7 @@ export default function GalleryPage({ params }: GalleryPageProps) {
 }
 
 export async function generateStaticParams() {
-  const categories = ['artist-monologues', 'quest-for-infinity', 'bubble-moon', 'weather-report'];
+  const categories = ['artist-monologues', 'quest-for-infinity', 'weather-report', 'bubble-moon'];
   return categories.map((category) => ({
     category,
   }));
