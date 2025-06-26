@@ -1,9 +1,5 @@
 ## PRD: "Maya Lama" Immersive Artwork Portfolio
 
-*   **Document Version:** 1.0
-*   **Author:** [Your Name]
-*   **Date:** [Current Date]
-*   **Project Title:** Maya Lama - Immersive Portfolio
 *   **Vision:** A minimalist, elegant, and highly performant web portfolio that presents Maya Lama's artwork as an immersive, uninterrupted visual experience. The design prioritizes the art itself, using subtle UI and fluid navigation to create a digital gallery that feels both modern and timeless.
 
 ---

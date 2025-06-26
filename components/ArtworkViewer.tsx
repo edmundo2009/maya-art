@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import GalleryNavigation from './GalleryNavigation';
 import type { ArtworkItem } from '@/lib/artwork';
@@ -21,6 +22,11 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
   const [imageLoading, setImageLoading] = useState(true);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [lastNavigationTime, setLastNavigationTime] = useState(0);
+  const [skipAnimation, setSkipAnimation] = useState(false);
+  const [displayIndex, setDisplayIndex] = useState(initialIndex);
+  const [showNavButtons, setShowNavButtons] = useState(false);
+  const [mouseTimer, setMouseTimer] = useState<NodeJS.Timeout | null>(null);
   
   const currentArtwork = artworks[currentIndex];
   const isFirst = currentIndex === 0;
@@ -28,12 +34,20 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
 
   const navigateToImage = useCallback((newIndex: number, dir: number) => {
     if (newIndex >= 0 && newIndex < artworks.length) {
-      setImageLoading(true); // Set loading state when changing images
+      const now = Date.now();
+      const timeSinceLastNav = now - lastNavigationTime;
+      
+      // If navigating too rapidly (less than 100ms), skip animation
+      const shouldSkipAnimation = timeSinceLastNav < 100;
+      setSkipAnimation(shouldSkipAnimation);
+      setLastNavigationTime(now);
+      
+      setImageLoading(true);
       setDirection(dir);
       setCurrentIndex(newIndex);
       onIndexChange?.(newIndex);
     }
-  }, [artworks.length, onIndexChange]);
+  }, [artworks.length, onIndexChange, lastNavigationTime]);
 
   const goToPrevious = useCallback(() => {
     if (!isFirst) {
@@ -77,8 +91,51 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
   useEffect(() => {
     if (initialIndex !== currentIndex) {
       setCurrentIndex(initialIndex);
+      setDisplayIndex(initialIndex);
     }
   }, [initialIndex, currentIndex]);
+
+  // Debounced display index update to prevent number flickering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDisplayIndex(currentIndex);
+    }, skipAnimation ? 0 : 30); // Immediate for rapid nav, slight delay for smooth nav
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, skipAnimation]);
+
+  // Mouse movement and click detection for nav button visibility
+  useEffect(() => {
+    const handleMouseActivity = () => {
+      // Show buttons immediately on mouse movement or click
+      setShowNavButtons(true);
+      
+      // Clear existing timer
+      if (mouseTimer) {
+        clearTimeout(mouseTimer);
+      }
+      
+      // Set new timer to hide buttons after 1 second of no activity
+      const newTimer = setTimeout(() => {
+        setShowNavButtons(false);
+      }, 1000);
+      
+      setMouseTimer(newTimer);
+    };
+
+    // Add both mouse move and click listeners to the document
+    document.addEventListener('mousemove', handleMouseActivity);
+    document.addEventListener('click', handleMouseActivity);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousemove', handleMouseActivity);
+      document.removeEventListener('click', handleMouseActivity);
+      if (mouseTimer) {
+        clearTimeout(mouseTimer);
+      }
+    };
+  }, [mouseTimer]);
 
   // Enhanced keyboard navigation (left/right/up/down arrows)
   useEffect(() => {
@@ -94,6 +151,30 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToPrevious, goToNext]);
+
+  // Scroll wheel navigation
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      
+      // Determine scroll direction
+      if (event.deltaY > 0) {
+        // Scrolling down/away = next image
+        goToNext();
+      } else if (event.deltaY < 0) {
+        // Scrolling up/towards = previous image
+        goToPrevious();
+      }
+    };
+
+    // Add wheel listener to the document
+    document.addEventListener('wheel', handleWheel, { passive: false });
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('wheel', handleWheel);
+    };
   }, [goToPrevious, goToNext]);
 
   // Enhanced preloading strategy with cache warming
@@ -168,20 +249,18 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
     warmCache();
   }, [artworks]); // Only depend on artworks, not currentIndex
 
+  // Optimized variants for fast navigation - no blur, just opacity
   const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0
+    enter: () => ({
+      opacity: 0,
     }),
     center: {
       zIndex: 1,
-      x: 0,
-      opacity: 1
+      opacity: 1,
     },
-    exit: (direction: number) => ({
+    exit: () => ({
       zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0
+      opacity: 0,
     })
   };
 
@@ -194,70 +273,83 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
     >
       {/* Header UI */}
       <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-start p-6">
-        {/* HOME Link */}
+        {/* HOME Link - with mouse activity visibility */}
         <Link
           href="/"
-          className="font-inter font-medium text-sm tracking-widest text-black/90 hover:text-black hover:bg-black/10 px-3 py-2 rounded transition-colors duration-200"
+          className={`font-inter font-medium text-sm tracking-widest text-black/90 hover:text-black hover:bg-black/10 px-3 py-2 rounded transition-all duration-300 ${
+            showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         >
           HOME
         </Link>
         
-        {/* Category Navigation */}
+        {/* Category Navigation - always visible */}
         <GalleryNavigation currentCategory={categoryName} />
       </div>
 
       {/* Image Counter - positioned above category navigation */}
       <div className="absolute top-0 right-6 z-20 -mb-4 flex justify-center">
-        <span className="text-black/70 text-[16.8px] font-normal tracking-wide">
-          {currentIndex + 1} / {artworks.length}
+        <span className="font-inter font-medium text-sm tracking-widest text-black/90 transition-none">
+          {displayIndex + 1} / {artworks.length}
         </span>
       </div>
 
-      {/* Main Image Container */}
+      {/* Main Image Container - Framer Motion with rapid navigation handling */}
       <div className="relative w-full h-full flex items-center justify-center">
-        <div className="w-full h-full flex items-center justify-center">
-          <Image
-            src={`/artwork/${currentArtwork.category}/${currentArtwork.filename}`}
-            alt={currentArtwork.alt}
-            width={1920}
-            height={1080}
-            className="max-w-full max-h-full object-contain transform-gpu transition-transform transition-opacity duration-500 ease-out will-change-transform"
-            priority
-            quality={85}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAQABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEBf/EACQQAAIBAwMEAwEAAAAAAAAAAAECAwAEEQUSITFBUWETInGR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAgP/xAAYEQEBAQEBAAAAAAAAAAAAAAAAAQIRAf/aAAwDAQACEQMRAD8A2bK2jtraOCJdqRqFUewqSo7aXzbeOTGNyg4qSgAooooAKKKKACiiigD/2Q=="
-            onLoad={() => setImageLoading(false)}
-            onError={() => setImageLoading(false)}
-          />
-        </div>
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={`${currentArtwork.category}-${currentArtwork.filename}`}
+            variants={slideVariants}
+            initial={skipAnimation ? "center" : "enter"}
+            animate="center"
+            exit={skipAnimation ? "center" : "exit"}
+            transition={{
+              duration: skipAnimation ? 0 : 0.05,
+              ease: "linear",
+            }}
+            className="w-full h-full flex items-center justify-center absolute inset-0"
+          >
+            <Image
+              src={`/artwork/${currentArtwork.category}/${currentArtwork.filename}`}
+              alt={currentArtwork.alt}
+              width={1920}
+              height={1080}
+              className="max-w-full max-h-full object-contain"
+              priority
+              quality={85}
+              onLoad={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Navigation Arrows - Hidden on mobile, category-specific positioning on larger screens */}
+      {/* Navigation Arrows - Hidden on mobile, show/hide based on mouse activity */}
       {!isFirst && (
         <button
           onClick={goToPrevious}
-          className={`hidden md:block absolute z-20 p-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 ${
+          className={`hidden md:block absolute z-20 p-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 transition-opacity duration-300 ${
             categoryName === 'Artist Monologues' 
               ? 'left-[25%] top-6' 
               : 'left-6 top-1/2 -translate-y-1/2'
-          }`}
+          } ${showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           aria-label="Previous image"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-7 h-7 drop-shadow-md" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3))' }} />
         </button>
       )}
 
       {!isLast && (
         <button
           onClick={goToNext}
-          className={`hidden md:block absolute z-20 p-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 ${
+          className={`hidden md:block absolute z-20 p-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 transition-opacity duration-300 ${
             categoryName === 'Artist Monologues' 
               ? 'left-[75%] top-6' 
               : 'right-6 top-1/2 -translate-y-1/2'
-          }`}
+          } ${showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           aria-label="Next image"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-7 h-7 drop-shadow-md" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3))' }} />
         </button>
       )}
 
