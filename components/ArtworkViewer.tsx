@@ -273,11 +273,11 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
     >
       {/* Header UI */}
       <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-start p-6">
-        {/* HOME Link - with mouse activity visibility */}
+        {/* HOME Link - always visible on mobile, mouse activity visibility on desktop */}
         <Link
           href="/"
-          className={`font-inter font-medium text-sm tracking-widest text-black/90 hover:text-black hover:bg-black/10 px-3 py-2 rounded transition-all duration-300 ${
-            showNavButtons ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          className={`font-inter font-medium text-sm tracking-widest text-black/90 hover:text-black hover:bg-black/10 px-3 py-2 rounded transition-all duration-300 opacity-100 ${
+            showNavButtons ? 'md:opacity-100' : 'md:opacity-0 md:pointer-events-none'
           }`}
         >
           HOME
@@ -324,7 +324,7 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
         </AnimatePresence>
       </div>
 
-      {/* Navigation Arrows - Hidden on mobile, show/hide based on mouse activity */}
+      {/* Desktop Navigation Arrows - Hidden on mobile, show/hide based on mouse activity */}
       {!isFirst && (
         <button
           onClick={goToPrevious}
@@ -350,6 +350,27 @@ export default function ArtworkViewer({ artworks, initialIndex, categoryName, on
           aria-label="Next image"
         >
           <ChevronRight className="w-7 h-7 drop-shadow-md" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3))' }} />
+        </button>
+      )}
+
+      {/* Mobile Navigation Arrows - Bottom positioned, 75% size, always visible */}
+      {!isFirst && (
+        <button
+          onClick={goToPrevious}
+          className="block md:hidden absolute z-20 bottom-6 left-[15%] p-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 transition-colors duration-200"
+          aria-label="Previous image"
+        >
+          <ChevronLeft className="w-5 h-5 drop-shadow-md" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3))' }} />
+        </button>
+      )}
+
+      {!isLast && (
+        <button
+          onClick={goToNext}
+          className="block md:hidden absolute z-20 bottom-6 left-[85%] -translate-x-1/2 p-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full text-black/80 hover:text-black shadow-lg border border-gray-200 transition-colors duration-200"
+          aria-label="Next image"
+        >
+          <ChevronRight className="w-5 h-5 drop-shadow-md" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3))' }} />
         </button>
       )}
 
